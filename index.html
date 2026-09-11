@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بطل الجمع | مغامرة الرياضيات الممتعة</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts for Arabic Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800;900&family=Tajawal:wght@500;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            font-family: 'Cairo', 'Tajawal', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0F172A 0%, #1E293B 50%, #0F172A 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Interactive cartoon style buttons and cards */
+        .btn-cartoon {
+            box-shadow: 0 8px 0 rgba(0, 0, 0, 0.25), inset 0 4px 0 rgba(255, 255, 255, 0.4);
+            transition: all 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .btn-cartoon:hover {
+            transform: translateY(-3px);
+            filter: brightness(1.08);
+        }
+
+        .btn-cartoon:active {
+            transform: translateY(5px);
+            box-shadow: 0 2px 0 rgba(0, 0, 0, 0.25), inset 0 2px 0 rgba(255, 255, 255, 0.4);
+        }
+
+        .card-cartoon {
+            box-shadow: 0 14px 28px rgba(0,0,0,0.3), inset 0 3px 0 rgba(255,255,255,0.7);
+            border: 4px solid #FFFFFF;
+        }
+
+        /* Keyframe Animations */
+        @keyframes floatSlow {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-12px) rotate(2deg); }
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { transform: scale(1); filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.6)); }
+            50% { transform: scale(1.06); filter: drop-shadow(0 0 24px rgba(255, 215, 0, 0.95)); }
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.6); opacity: 0; }
+            80% { transform: scale(1.08); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-10px); }
+            40%, 80% { transform: translateX(10px); }
+        }
+
+        .animate-float { animation: floatSlow 4s ease-in-out infinite; }
+        .animate-glow { animation: pulseGlow 2s infinite; }
+        .animate-pop { animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        .animate-shake { animation: shake 0.4s ease-in-out; }
+
+        /* Eastern Arabic Numerals Styling */
+        .arabic-num {
+            font-family: 'Cairo', sans-serif;
+            font-weight: 800;
+            letter-spacing: 1px;
+        }
+
+        #particleCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body class="text-slate-800 flex flex-col justify-between items-center min-h-screen relative p-2 md:p-5">
+
+    <!-- Particle Overlay Canvas for Fireworks & Confetti -->
+    <canvas id="particleCanvas"></canvas>
+
+    <header class="w-full max-w-5xl flex justify-between items-center bg-white/10 backdrop-blur-md p-3 md:p-4 rounded-3xl border border-white/20 shadow-xl text-white mb-3">
+        <div class="flex items-center space-x-3 space-x-reverse">
+            <div id="avatarBadge" class="w-12 h-12 md:w-14 md:h-14 bg-amber-400 rounded-2xl flex items-center justify-center text-2xl md:text-3xl border-2 border-white shadow-md">
+                🦸‍♂️
+            </div>
+            <div>
+                <h1 id="playerDisplay" class="font-extrabold text-lg md:text-xl text-yellow-300">بطل الجمع</h1>
+                <span id="stageDisplay" class="text-xs md:text-sm bg-indigo-600/90 px-3 py-0.5 rounded-full border border-indigo-300 inline-block mt-0.5 font-bold">المرحلة ١: قرية الأرقام 🏠</span>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2 md:gap-3">
+            <button id="teacherBtn" title="لوحة المعلم" onclick="openTeacherModal()" class="btn-cartoon bg-purple-600 hover:bg-purple-500 text-white p-2.5 md:p-3 rounded-2xl text-lg flex items-center justify-center">
+                <i class="fa-solid fa-chalkboard-user"></i>
+            </button>
+            <button id="soundToggleBtn" title="كتم / تشغيل الصوت" onclick="toggleSound()" class="btn-cartoon bg-teal-600 hover:bg-teal-500 text-white p-2.5 md:p-3 rounded-2xl text-lg flex items-center justify-center">
+                <i id="soundIcon" class="fa-solid fa-volume-high"></i>
+            </button>
+            <button onclick="showStageMap()" class="btn-cartoon bg-amber-500 hover:bg-amber-400 text-white px-3 py-2 md:px-4 md:py-2.5 rounded-2xl font-bold text-xs md:text-sm flex items-center gap-1.5">
+                <i class="fa-solid fa-map"></i> <span class="hidden sm:inline">الخريطة</span>
+            </button>
+        </div>
+    </header>
+
+    <main class="w-full max-w-4xl flex-1 flex flex-col items-center justify-center relative my-2">
+
+        <section id="welcomeScreen" class="w-full bg-white/95 backdrop-blur-lg rounded-3xl p-6 md:p-10 card-cartoon text-center animate-pop">
+            <div class="inline-block p-4 bg-yellow-100 rounded-full mb-3 text-5xl md:text-6xl animate-float">
+                🏰
+            </div>
+            <h2 class="text-3xl md:text-5xl font-black text-indigo-950 mb-2">مغامرة بطل الجمع!</h2>
+            <p class="text-slate-600 font-bold text-base md:text-lg mb-6">تعلم جمع الأعداد المكونة من رقمين بدون إرجاع أو حمل وجمع الكنوز 💎</p>
+
+            <div class="max-w-md mx-auto mb-6">
+                <label class="block text-right text-slate-700 font-bold mb-2 pr-2 text-sm md:text-base">اسم البطل الصغير:</label>
+                <div class="relative">
+                    <input type="text" id="studentNameInput" placeholder="اكتب اسمك هنا..." value="عبد الله" class="w-full p-4 pr-12 rounded-2xl border-4 border-indigo-200 focus:border-indigo-500 outline-none text-xl font-bold text-slate-800 text-center shadow-inner">
+                    <i class="fa-solid fa-user-ninja absolute right-4 top-1/2 -translate-y-1/2 text-2xl text-indigo-400"></i>
+                </div>
+            </div>
+
+            <!-- Avatar Selection Grid -->
+            <div class="mb-8">
+                <label class="block text-right text-slate-700 font-bold mb-2 pr-2 text-sm md:text-base">اختر شخصيتك المفضلة:</label>
+                <div class="flex justify-center gap-3 md:gap-5 flex-wrap">
+                    <button type="button" onclick="selectAvatar('🦸‍♂️')" class="avatar-option text-3xl p-3 bg-amber-100 rounded-2xl border-4 border-amber-400 hover:scale-110 transition-transform">🦸‍♂️</button>
+                    <button type="button" onclick="selectAvatar('🦸‍♀️')" class="avatar-option text-3xl p-3 bg-pink-100 rounded-2xl border-2 border-transparent hover:scale-110 transition-transform">🦸‍♀️</button>
+                    <button type="button" onclick="selectAvatar('🦁')" class="avatar-option text-3xl p-3 bg-orange-100 rounded-2xl border-2 border-transparent hover:scale-110 transition-transform">🦁</button>
+                    <button type="button" onclick="selectAvatar('🤖')" class="avatar-option text-3xl p-3 bg-blue-100 rounded-2xl border-2 border-transparent hover:scale-110 transition-transform">🤖</button>
+                    <button type="button" onclick="selectAvatar('🦄')" class="avatar-option text-3xl p-3 bg-purple-100 rounded-2xl border-2 border-transparent hover:scale-110 transition-transform">🦄</button>
+                </div>
+            </div>
+
+            <button onclick="startGameFromWelcome()" class="btn-cartoon w-full max-w-md bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-black text-2xl py-4 rounded-3xl shadow-lg flex items-center justify-center gap-3 mx-auto">
+                <span>ابدأ المغامرة الآن</span>
+                <i class="fa-solid fa-play"></i>
+            </button>
+        </section>
+
+        <section id="mapScreen" class="w-full bg-white/95 backdrop-blur-lg rounded-3xl p-6 md:p-8 card-cartoon hidden animate-pop">
+            <div class="text-center mb-6">
+                <h2 class="text-2xl md:text-4xl font-black text-indigo-900">🗺️ خريطة المغامرة</h2>
+                <p class="text-slate-600 font-bold text-sm md:text-base">اختر المرحلة وابدأ في جمع الكنوز والإجابات الصحيحة!</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-3xl mx-auto">
+                <!-- Stage 1 Card -->
+                <div id="stageCard1" class="stage-card p-5 rounded-3xl border-4 border-emerald-400 bg-gradient-to-br from-emerald-50 to-teal-100 flex items-center justify-between shadow-md hover:shadow-xl transition-all">
+                    <div class="flex items-center gap-4">
+                        <span class="text-5xl">🏠</span>
+                        <div>
+                            <h3 class="font-extrabold text-xl text-emerald-900">المرحلة ١: قرية الأرقام</h3>
+                            <p class="text-xs font-bold text-emerald-700">تمارين أساسية بسيطة للتسخين</p>
+                            <span class="inline-block mt-2 text-xs font-black bg-emerald-200 text-emerald-800 px-2.5 py-0.5 rounded-full">النقاط: <span class="arabic-num" id="stage1Score">٠</span>/٥٠</span>
+                        </div>
+                    </div>
+                    <button onclick="selectStage(1)" class="btn-cartoon bg-emerald-500 hover:bg-emerald-400 text-white font-extrabold px-5 py-3 rounded-2xl text-sm">
+                        دخول
+                    </button>
+                </div>
+
+                <!-- Stage 2 Card -->
+                <div id="stageCard2" class="stage-card p-5 rounded-3xl border-4 border-slate-300 bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-between opacity-75 transition-all">
+                    <div class="flex items-center gap-4">
+                        <span class="text-5xl">🌳</span>
+                        <div>
+                            <h3 class="font-extrabold text-xl text-blue-900">المرحلة ٢: غابة الجمع</h3>
+                            <p class="text-xs font-bold text-blue-700">أسئلة متدرجة بدون حمل</p>
+                            <span class="inline-block mt-2 text-xs font-black bg-blue-200 text-blue-800 px-2.5 py-0.5 rounded-full">مطلوب: ٥٠ نقطة</span>
+                        </div>
+                    </div>
+                    <button id="stageBtn2" onclick="selectStage(2)" disabled class="btn-cartoon bg-slate-400 text-white font-extrabold px-5 py-3 rounded-2xl text-sm cursor-not-allowed">
+                        <i class="fa-solid fa-lock"></i>
+                    </button>
+                </div>
+
+                <!-- Stage 3 Card -->
+                <div id="stageCard3" class="stage-card p-5 rounded-3xl border-4 border-slate-300 bg-gradient-to-br from-slate-50 to-purple-50 flex items-center justify-between opacity-75 transition-all">
+                    <div class="flex items-center gap-4">
+                        <span class="text-5xl">🏰</span>
+                        <div>
+                            <h3 class="font-extrabold text-xl text-purple-900">المرحلة ٣: قلعة الأعداد</h3>
+                            <p class="text-xs font-bold text-purple-700">تحدي السرعة والمؤقت</p>
+                            <span class="inline-block mt-2 text-xs font-black bg-purple-200 text-purple-800 px-2.5 py-0.5 rounded-full">مطلوب: ١٢٠ نقطة</span>
+                        </div>
+                    </div>
+                    <button id="stageBtn3" onclick="selectStage(3)" disabled class="btn-cartoon bg-slate-400 text-white font-extrabold px-5 py-3 rounded-2xl text-sm cursor-not-allowed">
+                        <i class="fa-solid fa-lock"></i>
+                    </button>
+                </div>
+
+                <!-- Stage 4 Card -->
+                <div id="stageCard4" class="stage-card p-5 rounded-3xl border-4 border-slate-300 bg-gradient-to-br from-slate-50 to-amber-50 flex items-center justify-between opacity-75 transition-all">
+                    <div class="flex items-center gap-4">
+                        <span class="text-5xl">💎</span>
+                        <div>
+                            <h3 class="font-extrabold text-xl text-amber-900">المرحلة ٤: كنز الجمع</h3>
+                            <p class="text-xs font-bold text-amber-700">مستوى الأبطال المحترفين</p>
+                            <span class="inline-block mt-2 text-xs font-black bg-amber-200 text-amber-800 px-2.5 py-0.5 rounded-full">مطلوب: ٢٠٠ نقطة</span>
+                        </div>
+                    </div>
+                    <button id="stageBtn4" onclick="selectStage(4)" disabled class="btn-cartoon bg-slate-400 text-white font-extrabold px-5 py-3 rounded-2xl text-sm cursor-not-allowed">
+                        <i class="fa-solid fa-lock"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="mt-6 text-center">
+                <button onclick="startCurrentStage()" class="btn-cartoon bg-gradient-to-r from-amber-500 to-orange-500 text-white font-black text-xl px-10 py-3.5 rounded-2xl shadow-md">
+                    متابعة اللعب 🔥
+                </button>
+            </div>
+        </section>
+
+        <section id="gameScreen" class="w-full flex flex-col gap-4 hidden">
+            
+            <!-- Game HUD & Top Bar -->
+            <div class="bg-white/90 backdrop-blur-md p-3 md:p-4 rounded-3xl card-cartoon flex flex-wrap justify-between items-center gap-2">
+                <div class="flex items-center gap-1.5 bg-rose-100 border-2 border-rose-300 px-3 py-1.5 rounded-2xl">
+                    <span class="text-xs font-bold text-rose-700 hidden sm:inline">المحاولات:</span>
+                    <div id="heartsContainer" class="flex text-lg md:text-xl text-rose-500 gap-1">
+                        <i class="fa-solid fa-heart animate-pulse"></i>
+                        <i class="fa-solid fa-heart animate-pulse"></i>
+                        <i class="fa-solid fa-heart animate-pulse"></i>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <div class="bg-amber-100 border-2 border-amber-300 px-3 py-1.5 rounded-2xl flex items-center gap-1.5">
+                        <span class="text-xl">⭐</span>
+                        <span id="scoreText" class="font-extrabold text-amber-900 text-base md:text-lg arabic-num">٠</span>
+                    </div>
+
+                    <div id="comboBadge" class="bg-orange-500 text-white font-black px-3 py-1.5 rounded-2xl text-xs md:text-sm shadow-sm flex items-center gap-1 hidden animate-bounce">
+                        <span>متتالي!</span>
+                        <span id="comboCount" class="arabic-num text-amber-200">x0</span>
+                        <span>🔥</span>
+                    </div>
+                </div>
+
+                <div id="timerContainer" class="bg-sky-100 border-2 border-sky-300 px-3 py-1.5 rounded-2xl flex items-center gap-2">
+                    <i class="fa-solid fa-stopwatch text-sky-600 text-lg"></i>
+                    <span id="timerText" class="font-extrabold text-sky-900 text-base md:text-lg arabic-num">٢٠</span>
+                    <span class="text-xs text-sky-700">ثانية</span>
+                </div>
+            </div>
+
+            <!-- MATH QUESTION BOARD CARD -->
+            <div class="bg-white/95 backdrop-blur-lg rounded-3xl p-6 md:p-8 card-cartoon text-center relative overflow-hidden flex flex-col items-center justify-center min-h-[310px]">
+                
+                <div class="absolute top-4 right-4 flex items-center gap-2">
+                    <button onclick="toggleProblemOrientation()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-3 py-1.5 rounded-xl border border-slate-300 transition-colors">
+                        <i class="fa-solid fa-arrows-rotate"></i> <span id="orientLabel">تغيير العرض (رأسي)</span>
+                    </button>
+                </div>
+
+                <div class="absolute left-4 top-4 hidden md:flex flex-col items-center animate-float">
+                    <span class="text-4xl">🦉</span>
+                    <span class="text-[10px] font-bold text-slate-500 bg-white px-2 py-0.5 rounded-full border border-slate-200 shadow-sm mt-1">المعلم حكيم</span>
+                </div>
+
+                <!-- Vertical Math Display -->
+                <div id="verticalProblem" class="flex flex-col items-end text-4xl md:text-6xl font-black text-slate-800 my-4 tracking-wider pr-8 border-b-4 border-slate-800 pb-3 inline-block relative">
+                    <div id="vNum1" class="arabic-num text-indigo-600">٢٣</div>
+                    <div class="flex items-center gap-4">
+                        <span class="text-3xl md:text-4xl text-amber-500 font-extrabold">+</span>
+                        <span id="vNum2" class="arabic-num text-teal-600">١٤</span>
+                    </div>
+                </div>
+
+                <!-- Horizontal Math Display -->
+                <div id="horizontalProblem" class="hidden text-3xl md:text-5xl font-black text-slate-800 my-8">
+                    <span id="hNum1" class="arabic-num text-indigo-600">٢٣</span>
+                    <span class="text-amber-500 mx-2">+</span>
+                    <span id="hNum2" class="arabic-num text-teal-600">١٤</span>
+                    <span class="text-slate-400 mx-2">=</span>
+                    <span class="text-amber-500 font-extrabold">؟</span>
+                </div>
+
+                <!-- Math Hint Box -->
+                <div id="hintBox" class="mt-2 bg-yellow-50 border-2 border-yellow-300 p-3 rounded-2xl max-w-md text-xs md:text-sm font-bold text-amber-900 hidden animate-pop">
+                    <i class="fa-solid fa-lightbulb text-amber-500 text-base ml-1"></i>
+                    <span id="hintText">اجمع الآحاد أولاً، ثم اجمع العشرات!</span>
+                </div>
+
+                <button onclick="showHint()" class="mt-2 text-xs text-indigo-600 hover:text-indigo-800 font-extrabold underline flex items-center gap-1">
+                    <i class="fa-regular fa-lightbulb"></i> تحتاج تلميحاً؟
+                </button>
+            </div>
+
+            <!-- Option Buttons Grid -->
+            <div id="optionsGrid" class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+                <!-- Dynamically populated choices -->
+            </div>
+
+            <!-- Interactive Feedback Banner -->
+            <div id="feedbackBanner" class="p-4 rounded-2xl text-center text-white font-extrabold text-lg md:text-xl shadow-lg hidden animate-pop">
+                <!-- Dynamic feedback text -->
+            </div>
+        </section>
+
+        <div id="chestModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+            <div class="bg-white rounded-3xl p-6 md:p-8 max-w-md w-full text-center card-cartoon animate-pop relative">
+                <div class="text-6xl my-4 animate-glow inline-block">🎁</div>
+                <h3 class="text-2xl md:text-3xl font-black text-indigo-900 mb-2">صندوق المفاجآت!</h3>
+                <p class="text-slate-600 font-bold text-sm mb-6">لقد حققت سلسلة إجابات متتالية ممتازة! انقر لفتح الهدية:</p>
+                
+                <div id="chestBox" onclick="openChest()" class="cursor-pointer bg-gradient-to-b from-amber-300 to-amber-500 p-8 rounded-3xl border-4 border-amber-200 shadow-xl hover:scale-105 transition-transform flex items-center justify-center text-7xl mx-auto w-40 h-40">
+                    📦
+                </div>
+
+                <div id="chestReward" class="hidden my-4 text-2xl font-black text-emerald-600 animate-pop">
+                    <!-- Reward output -->
+                </div>
+
+                <button id="closeChestBtn" onclick="closeChestModal()" class="btn-cartoon bg-indigo-600 hover:bg-indigo-500 text-white font-black px-8 py-3 rounded-2xl text-lg mt-6 hidden">
+                    متابعة اللعب 🚀
+                </button>
+            </div>
+        </div>
+
+        <section id="resultsScreen" class="w-full bg-white/95 backdrop-blur-lg rounded-3xl p-6 md:p-10 card-cartoon text-center hidden animate-pop">
+            <div class="text-6xl mb-2 animate-glow">🏆</div>
+            <h2 class="text-3xl md:text-5xl font-black text-indigo-950 mb-1">نتيجة البطل</h2>
+            <p id="resultPlayerName" class="text-amber-600 font-extrabold text-xl md:text-2xl mb-4">عبد الله</p>
+
+            <div id="rankBadge" class="inline-block bg-gradient-to-r from-amber-400 to-yellow-500 text-white font-black px-6 py-2 rounded-full text-lg shadow-md mb-6">
+                ⭐ بطل الجمع الممتاز
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 max-w-2xl mx-auto mb-8">
+                <div class="bg-blue-50 border-2 border-blue-200 p-4 rounded-2xl">
+                    <span class="block text-xs font-bold text-blue-600 mb-1">الأسئلة المجابة</span>
+                    <span id="resTotal" class="text-2xl md:text-3xl font-black text-blue-900 arabic-num">١٠</span>
+                </div>
+                <div class="bg-emerald-50 border-2 border-emerald-200 p-4 rounded-2xl">
+                    <span class="block text-xs font-bold text-emerald-600 mb-1">الإجابات الصحيحة</span>
+                    <span id="resCorrect" class="text-2xl md:text-3xl font-black text-emerald-900 arabic-num">٩</span>
+                </div>
+                <div class="bg-rose-50 border-2 border-rose-200 p-4 rounded-2xl">
+                    <span class="block text-xs font-bold text-rose-600 mb-1">الإجابات الخاطئة</span>
+                    <span id="resWrong" class="text-2xl md:text-3xl font-black text-rose-900 arabic-num">١</span>
+                </div>
+                <div class="bg-amber-50 border-2 border-amber-200 p-4 rounded-2xl">
+                    <span class="block text-xs font-bold text-amber-600 mb-1">مجموع النقاط</span>
+                    <span id="resScore" class="text-2xl md:text-3xl font-black text-amber-900 arabic-num">١٤٠</span>
+                </div>
+            </div>
+
+            <p id="resQuote" class="text-slate-700 font-bold text-base md:text-lg mb-8 bg-slate-100 p-4 rounded-2xl border border-slate-200">
+                "أحسنت يا بطل! لقد أصبحت أسرع وأدق في حل مسائل الجمع بدون حمل! 🎉"
+            </p>
+
+            <div class="flex flex-wrap justify-center gap-4">
+                <button onclick="restartGame()" class="btn-cartoon bg-emerald-500 hover:bg-emerald-400 text-white font-black text-lg px-8 py-3.5 rounded-2xl">
+                    إعادة اللعب 🔄
+                </button>
+                <button onclick="showStageMap()" class="btn-cartoon bg-indigo-600 hover:bg-indigo-500 text-white font-black text-lg px-8 py-3.5 rounded-2xl">
+                    خريطة المراحل 🗺️
+                </button>
+            </div>
+        </section>
+
+        <div id="teacherModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+            <div class="bg-white rounded-3xl p-6 md:p-8 max-w-lg w-full card-cartoon relative max-h-[90vh] overflow-y-auto">
+                <button onclick="closeTeacherModal()" class="absolute top-4 left-4 text-slate-400 hover:text-slate-600 text-2xl font-bold">
+                    &times;
+                </button>
+
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="p-3 bg-purple-100 text-purple-700 text-2xl rounded-2xl">
+                        <i class="fa-solid fa-sliders"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-2xl font-black text-slate-900">لوحة تحكم المعلم / ولي الأمر</h3>
+                        <p class="text-xs text-slate-500 font-bold">تخصيص مستويات اللعبة وإعداداتها</p>
+                    </div>
+                </div>
+
+                <div class="space-y-4 text-right">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">اسم الطالب:</label>
+                        <input type="text" id="teacherStudentName" class="w-full p-3 rounded-xl border-2 border-slate-300 font-bold text-slate-800">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">عدد الأسئلة في الجولة:</label>
+                        <select id="teacherQCount" class="w-full p-3 rounded-xl border-2 border-slate-300 font-bold text-slate-800">
+                            <option value="5">٥ أسئلة</option>
+                            <option value="10" selected>١٠ أسئلة</option>
+                            <option value="15">١٥ سؤالاً</option>
+                            <option value="20">٢٠ سؤالاً</option>
+                        </select>
+                    </div>
+
+                    <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-200">
+                        <span class="font-bold text-sm text-slate-700">تفعيل المؤقت الزمني ⏳</span>
+                        <input type="checkbox" id="teacherTimerToggle" checked class="w-5 h-5 accent-purple-600">
+                    </div>
+
+                    <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-200">
+                        <span class="font-bold text-sm text-slate-700">تفعيل المؤثرات الصوتية 🔊</span>
+                        <input type="checkbox" id="teacherSoundToggle" checked class="w-5 h-5 accent-purple-600">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">الانتقال المباشر للمرحلة:</label>
+                        <select id="teacherStageSelect" class="w-full p-3 rounded-xl border-2 border-slate-300 font-bold text-slate-800">
+                            <option value="1">المرحلة ١: قرية الأرقام</option>
+                            <option value="2">المرحلة ٢: غابة الجمع</option>
+                            <option value="3">المرحلة ٣: قلعة الأعداد</option>
+                            <option value="4">المرحلة ٤: كنز الجمع</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mt-8 flex gap-3">
+                    <button onclick="saveTeacherSettings()" class="btn-cartoon flex-1 bg-purple-600 hover:bg-purple-500 text-white font-black py-3 rounded-2xl text-base">
+                        حفظ التعديلات 💾
+                    </button>
+                    <button onclick="closeTeacherModal()" class="btn-cartoon bg-slate-200 hover:bg-slate-300 text-slate-700 font-black px-6 py-3 rounded-2xl text-base">
+                        إلغاء
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="w-full max-w-5xl text-center text-xs text-white/70 font-bold py-2">
+        بطل الجمع &copy; ٢٠٢٦ - لعبة تعليمية تفاعلية للجمع بدون إعادة تجميع
+    </footer>
+
+    <script>
+        // Global Game State Storage
+        const gameState = {
+            studentName: "عبد الله",
+            avatar: "🦸‍♂️",
+            soundEnabled: true,
+            currentStage: 1,
+            score: 0,
+            hearts: 3,
+            combo: 0,
+            questionsCount: 10,
+            currentQuestionIndex: 0,
+            timerEnabled: true,
+            timerSeconds: 20,
+            timerInterval: null,
+            currentQuestion: null,
+            correctCount: 0,
+            wrongCount: 0,
+            orientation: "vertical",
+            stageScores: { 1: 0, 2: 0, 3: 0, 4: 0 }
+        };
+
+        const stageNames = {
+            1: "المرحلة ١: قرية الأرقام 🏠",
+            2: "المرحلة ٢: غابة الجمع 🌳",
+            3: "المرحلة ٣: قلعة الأعداد 🏰",
+            4: "المرحلة ٤: كنز الجمع 💎"
+        };
+
+        function toArabicDigits(num) {
+            if (num === null || num === undefined) return '';
+            const arabicDigits = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'];
+            return num.toString().replace(/\d/g, digit => arabicDigits[digit]);
+        }
+
+        function playSound(type) {
+            if (!gameState.soundEnabled) return;
+            try {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (!AudioCtx) return;
+                const ctx = new AudioCtx();
+
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+
+                const now = ctx.currentTime;
+
+                if (type === 'correct') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(523.25, now);
+                    osc.frequency.exponentialRampToValueAtTime(659.25, now + 0.1);
+                    osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.2);
+                    osc.frequency.exponentialRampToValueAtTime(1046.50, now + 0.35);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+                    osc.start(now);
+                    osc.stop(now + 0.5);
+                } else if (type === 'wrong') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(220, now);
+                    osc.frequency.exponentialRampToValueAtTime(164.81, now + 0.2);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                    osc.start(now);
+                    osc.stop(now + 0.4);
+                } else if (type === 'click') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(400, now);
+                    osc.frequency.exponentialRampToValueAtTime(800, now + 0.05);
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+                    osc.start(now);
+                    osc.stop(now + 0.08);
+                } else if (type === 'chest') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(440, now);
+                    osc.frequency.exponentialRampToValueAtTime(880, now + 0.15);
+                    osc.frequency.exponentialRampToValueAtTime(1320, now + 0.3);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
+                    osc.start(now);
+                    osc.stop(now + 0.6);
+                }
+            } catch(e) {}
+        }
+
+        function generateNoCarryQuestion() {
+            // Units sum < 10 guaranteed (u1 + u2 <= 9)
+            let u1 = Math.floor(Math.random() * 9); // 0 to 8
+            let u2 = Math.floor(Math.random() * (9 - u1)); // u1 + u2 <= 8
+
+            // Tens sum < 10 guaranteed (t1 + t2 <= 9)
+            let t1 = Math.floor(Math.random() * 8) + 1; // 1 to 8
+            let t2 = Math.floor(Math.random() * (9 - t1)) + 1; // t1 + t2 <= 9
+
+            let num1 = t1 * 10 + u1;
+            let num2 = t2 * 10 + u2;
+            let sum = num1 + num2;
+
+            let optionsSet = new Set();
+            optionsSet.add(sum);
+
+            while (optionsSet.size < 4) {
+                let delta = [1, -1, 10, -10, 2, -2, 11, -9][Math.floor(Math.random() * 8)];
+                let fakeAns = sum + delta;
+                if (fakeAns > 10 && fakeAns < 99 && fakeAns !== sum) {
+                    optionsSet.add(fakeAns);
+                }
+            }
+
+            let options = Array.from(optionsSet);
+            options.sort(() => Math.random() - 0.5);
+
+            return { num1, num2, u1, u2, t1, t2, sum, options };
+        }
+
+        function showScreen(screenId) {
+            ['welcomeScreen', 'mapScreen', 'gameScreen', 'resultsScreen'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            document.getElementById(screenId).classList.remove('hidden');
+        }
+
+        function selectAvatar(emoji) {
+            gameState.avatar = emoji;
+            document.getElementById('avatarBadge').textContent = emoji;
+            playSound('click');
+            document.querySelectorAll('.avatar-option').forEach(btn => {
+                btn.classList.remove('border-amber-400', 'bg-amber-100', 'border-4');
+                btn.classList.add('border-2', 'border-transparent');
+            });
+            event.currentTarget.classList.add('border-amber-400', 'bg-amber-100', 'border-4');
+        }
+
+        function startGameFromWelcome() {
+            let nameInput = document.getElementById('studentNameInput').value.trim();
+            if (nameInput) gameState.studentName = nameInput;
+            document.getElementById('playerDisplay').textContent = gameState.studentName;
+            playSound('click');
+            showStageMap();
+        }
+
+        function showStageMap() {
+            clearInterval(gameState.timerInterval);
+            updateStageMapUI();
+            showScreen('mapScreen');
+        }
+
+        function updateStageMapUI() {
+            document.getElementById('stage1Score').textContent = toArabicDigits(gameState.stageScores[1]);
+            
+            if (gameState.score >= 50) unlockStageCard(2, 'stageCard2', 'stageBtn2');
+            if (gameState.score >= 120) unlockStageCard(3, 'stageCard3', 'stageBtn3');
+            if (gameState.score >= 200) unlockStageCard(4, 'stageCard4', 'stageBtn4');
+        }
+
+        function unlockStageCard(stageNum, cardId, btnId) {
+            let card = document.getElementById(cardId);
+            let btn = document.getElementById(btnId);
+            card.classList.remove('opacity-75');
+            card.classList.add('border-emerald-400');
+            btn.disabled = false;
+            btn.classList.remove('bg-slate-400', 'cursor-not-allowed');
+            btn.classList.add('bg-emerald-500', 'hover:bg-emerald-400');
+            btn.innerHTML = 'دخول';
+        }
+
+        function selectStage(stageNum) {
+            gameState.currentStage = stageNum;
+            document.getElementById('stageDisplay').textContent = stageNames[stageNum];
+            playSound('click');
+            startCurrentStage();
+        }
+
+        function startCurrentStage() {
+            gameState.currentQuestionIndex = 0;
+            gameState.correctCount = 0;
+            gameState.wrongCount = 0;
+            gameState.hearts = 3;
+            gameState.combo = 0;
+            updateHeartsUI();
+            updateScoreUI();
+            showScreen('gameScreen');
+            loadNextQuestion();
+        }
+
+        function loadNextQuestion() {
+            if (gameState.currentQuestionIndex >= gameState.questionsCount) {
+                finishRound();
+                return;
+            }
+
+            gameState.currentQuestionIndex++;
+            gameState.currentQuestion = generateNoCarryQuestion();
+
+            document.getElementById('feedbackBanner').classList.add('hidden');
+            document.getElementById('hintBox').classList.add('hidden');
+
+            const q = gameState.currentQuestion;
+            document.getElementById('vNum1').textContent = toArabicDigits(q.num1);
+            document.getElementById('vNum2').textContent = toArabicDigits(q.num2);
+            document.getElementById('hNum1').textContent = toArabicDigits(q.num1);
+            document.getElementById('hNum2').textContent = toArabicDigits(q.num2);
+
+            const grid = document.getElementById('optionsGrid');
+            grid.innerHTML = '';
+            q.options.forEach(optVal => {
+                const btn = document.createElement('button');
+                btn.className = 'btn-cartoon bg-white hover:bg-amber-50 text-indigo-900 border-4 border-indigo-200 hover:border-amber-400 font-extrabold text-3xl md:text-4xl py-4 rounded-3xl shadow-md arabic-num transition-all';
+                btn.textContent = toArabicDigits(optVal);
+                btn.onclick = () => handleAnswerChoice(optVal, btn);
+                grid.appendChild(btn);
+            });
+
+            if (gameState.timerEnabled) {
+                document.getElementById('timerContainer').classList.remove('hidden');
+                startTimer();
+            } else {
+                document.getElementById('timerContainer').classList.add('hidden');
+            }
+        }
+
+        function startTimer() {
+            clearInterval(gameState.timerInterval);
+            gameState.timerSeconds = 20;
+            document.getElementById('timerText').textContent = toArabicDigits(gameState.timerSeconds);
+
+            gameState.timerInterval = setInterval(() => {
+                gameState.timerSeconds--;
+                document.getElementById('timerText').textContent = toArabicDigits(gameState.timerSeconds);
+
+                if (gameState.timerSeconds <= 0) {
+                    clearInterval(gameState.timerInterval);
+                    handleTimeOut();
+                }
+            }, 1000);
+        }
+
+        function handleAnswerChoice(selectedVal, btnElement) {
+            clearInterval(gameState.timerInterval);
+
+            const q = gameState.currentQuestion;
+            const isCorrect = (selectedVal === q.sum);
+
+            const allBtns = document.querySelectorAll('#optionsGrid button');
+            allBtns.forEach(b => b.disabled = true);
+
+            if (isCorrect) {
+                playSound('correct');
+                btnElement.classList.remove('bg-white', 'border-indigo-200');
+                btnElement.classList.add('bg-emerald-500', 'text-white', 'border-emerald-600', 'animate-glow');
+
+                gameState.correctCount++;
+                gameState.combo++;
+                let pointsEarned = 10 + (gameState.combo > 1 ? gameState.combo * 2 : 0);
+                gameState.score += pointsEarned;
+                gameState.stageScores[gameState.currentStage] += pointsEarned;
+
+                triggerConfetti();
+                showFeedback('ممتازة! 🎉 إجابة صحيحة +' + toArabicDigits(pointsEarned) + ' نقطة', 'bg-emerald-500');
+                updateScoreUI();
+
+                if (gameState.combo % 3 === 0) {
+                    setTimeout(triggerMysteryChest, 800);
+                } else {
+                    setTimeout(loadNextQuestion, 1400);
+                }
+            } else {
+                playSound('wrong');
+                btnElement.classList.remove('bg-white');
+                btnElement.classList.add('bg-rose-500', 'text-white', 'border-rose-600', 'animate-shake');
+
+                gameState.wrongCount++;
+                gameState.combo = 0;
+                gameState.hearts--;
+
+                updateHeartsUI();
+                showFeedback('حاول مرة أخرى! 💡 ركز في جمع الآحاد ثم العشرات', 'bg-amber-500');
+
+                if (gameState.hearts <= 0) {
+                    setTimeout(finishRound, 1500);
+                } else {
+                    setTimeout(() => {
+                        allBtns.forEach(b => b.disabled = false);
+                        btnElement.classList.add('opacity-50', 'cursor-not-allowed');
+                    }, 1200);
+                }
+            }
+        }
+
+        function handleTimeOut() {
+            playSound('wrong');
+            gameState.wrongCount++;
+            gameState.combo = 0;
+            gameState.hearts--;
+            updateHeartsUI();
+            showFeedback('انتهى الوقت! ⏳ حاول في السؤال التالي', 'bg-rose-500');
+
+            if (gameState.hearts <= 0) {
+                setTimeout(finishRound, 1500);
+            } else {
+                setTimeout(loadNextQuestion, 1500);
+            }
+        }
+
+        function showFeedback(text, bgClass) {
+            const banner = document.getElementById('feedbackBanner');
+            banner.className = `p-4 rounded-2xl text-center text-white font-extrabold text-lg md:text-xl shadow-lg mt-3 ${bgClass} animate-pop`;
+            banner.textContent = text;
+            banner.classList.remove('hidden');
+        }
+
+        function showHint() {
+            const q = gameState.currentQuestion;
+            if (!q) return;
+            const hintText = `اجمع الآحاد أولاً: ${toArabicDigits(q.u1)} + ${toArabicDigits(q.u2)} = ${toArabicDigits(q.u1 + q.u2)}، ثم العشرات: ${toArabicDigits(q.t1)} + ${toArabicDigits(q.t2)} = ${toArabicDigits(q.t1 + q.t2)}`;
+            document.getElementById('hintText').textContent = hintText;
+            document.getElementById('hintBox').classList.remove('hidden');
+            playSound('click');
+        }
+
+        function toggleProblemOrientation() {
+            if (gameState.orientation === 'vertical') {
+                gameState.orientation = 'horizontal';
+                document.getElementById('verticalProblem').classList.add('hidden');
+                document.getElementById('horizontalProblem').classList.remove('hidden');
+                document.getElementById('orientLabel').textContent = 'تغيير العرض (أفقي)';
+            } else {
+                gameState.orientation = 'vertical';
+                document.getElementById('horizontalProblem').classList.add('hidden');
+                document.getElementById('verticalProblem').classList.remove('hidden');
+                document.getElementById('orientLabel').textContent = 'تغيير العرض (رأسي)';
+            }
+            playSound('click');
+        }
+
+        function updateScoreUI() {
+            document.getElementById('scoreText').textContent = toArabicDigits(gameState.score);
+            const comboBadge = document.getElementById('comboBadge');
+            if (gameState.combo > 1) {
+                comboBadge.classList.remove('hidden');
+                document.getElementById('comboCount').textContent = 'x' + toArabicDigits(gameState.combo);
+            } else {
+                comboBadge.classList.add('hidden');
+            }
+        }
+
+        function updateHeartsUI() {
+            const container = document.getElementById('heartsContainer');
+            container.innerHTML = '';
+            for (let i = 0; i < 3; i++) {
+                if (i < gameState.hearts) {
+                    container.innerHTML += '<i class="fa-solid fa-heart animate-pulse"></i>';
+                } else {
+                    container.innerHTML += '<i class="fa-regular fa-heart text-slate-300"></i>';
+                }
+            }
+        }
+
+        function triggerMysteryChest() {
+            playSound('chest');
+            document.getElementById('chestReward').classList.add('hidden');
+            document.getElementById('closeChestBtn').classList.add('hidden');
+            document.getElementById('chestBox').classList.remove('hidden');
+            document.getElementById('chestModal').classList.remove('hidden');
+        }
+
+        function openChest() {
+            playSound('correct');
+            document.getElementById('chestBox').classList.add('hidden');
+
+            const rewards = [
+                '⭐ +٢٠ نقطة إضافية!',
+                '💎 مضاعفة نقاط الجولة!',
+                '🪙 حصلت على ٥٠ عملة نقدية!',
+                '🚀 +١٠ ثوانٍ وقت إضافي!'
+            ];
+            const reward = rewards[Math.floor(Math.random() * rewards.length)];
+            gameState.score += 20;
+            updateScoreUI();
+
+            const rewardDiv = document.getElementById('chestReward');
+            rewardDiv.textContent = reward;
+            rewardDiv.classList.remove('hidden');
+            document.getElementById('closeChestBtn').classList.remove('hidden');
+            triggerConfetti();
+        }
+
+        function closeChestModal() {
+            document.getElementById('chestModal').classList.add('hidden');
+            loadNextQuestion();
+        }
+
+        function finishRound() {
+            clearInterval(gameState.timerInterval);
+            
+            document.getElementById('resultPlayerName').textContent = gameState.studentName;
+            document.getElementById('resTotal').textContent = toArabicDigits(gameState.currentQuestionIndex);
+            document.getElementById('resCorrect').textContent = toArabicDigits(gameState.correctCount);
+            document.getElementById('resWrong').textContent = toArabicDigits(gameState.wrongCount);
+            document.getElementById('resScore').textContent = toArabicDigits(gameState.score);
+
+            let accuracy = gameState.correctCount / Math.max(1, gameState.currentQuestionIndex);
+            let rankText = "⭐ مبتدئ الجمع";
+            if (accuracy >= 0.9) rankText = "⭐⭐⭐⭐ بطل الجمع الخارق";
+            else if (accuracy >= 0.75) rankText = "⭐⭐⭐ ممتاز جداً";
+            else if (accuracy >= 0.5) rankText = "⭐⭐ جيد جداً";
+
+            document.getElementById('rankBadge').textContent = rankText;
+            triggerConfetti();
+            showScreen('resultsScreen');
+        }
+
+        function restartGame() {
+            playSound('click');
+            startCurrentStage();
+        }
+
+        function openTeacherModal() {
+            document.getElementById('teacherStudentName').value = gameState.studentName;
+            document.getElementById('teacherQCount').value = gameState.questionsCount;
+            document.getElementById('teacherTimerToggle').checked = gameState.timerEnabled;
+            document.getElementById('teacherSoundToggle').checked = gameState.soundEnabled;
+            document.getElementById('teacherStageSelect').value = gameState.currentStage;
+            document.getElementById('teacherModal').classList.remove('hidden');
+            playSound('click');
+        }
+
+        function closeTeacherModal() {
+            document.getElementById('teacherModal').classList.add('hidden');
+        }
+
+        function saveTeacherSettings() {
+            gameState.studentName = document.getElementById('teacherStudentName').value || "عبد الله";
+            gameState.questionsCount = parseInt(document.getElementById('teacherQCount').value) || 10;
+            gameState.timerEnabled = document.getElementById('teacherTimerToggle').checked;
+            gameState.soundEnabled = document.getElementById('teacherSoundToggle').checked;
+            
+            let stageVal = parseInt(document.getElementById('teacherStageSelect').value);
+            gameState.currentStage = stageVal;
+
+            document.getElementById('playerDisplay').textContent = gameState.studentName;
+            document.getElementById('stageDisplay').textContent = stageNames[stageVal];
+
+            closeTeacherModal();
+            playSound('correct');
+            showStageMap();
+        }
+
+        function toggleSound() {
+            gameState.soundEnabled = !gameState.soundEnabled;
+            const icon = document.getElementById('soundIcon');
+            icon.className = gameState.soundEnabled ? 'fa-solid fa-volume-high' : 'fa-solid fa-volume-xmark';
+        }
+
+        function triggerConfetti() {
+            const canvas = document.getElementById('particleCanvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            const particles = [];
+            const colors = ['#f59e0b', '#10b981', '#3b82f6', '#ec4899', '#8b5cf6'];
+
+            for (let i = 0; i < 60; i++) {
+                particles.push({
+                    x: canvas.width / 2,
+                    y: canvas.height / 2,
+                    vx: (Math.random() - 0.5) * 12,
+                    vy: (Math.random() - 0.7) * 12,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    radius: Math.random() * 6 + 4,
+                    alpha: 1
+                });
+            }
+
+            let frame = 0;
+            function animateParticles() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                particles.forEach((p) => {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.vy += 0.2;
+                    p.alpha -= 0.015;
+
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = p.color;
+                    ctx.globalAlpha = Math.max(0, p.alpha);
+                    ctx.fill();
+                });
+
+                frame++;
+                if (frame < 70) {
+                    requestAnimationFrame(animateParticles);
+                } else {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                }
+            }
+            animateParticles();
+        }
+
+        window.addEventListener('resize', () => {
+            const canvas = document.getElementById('particleCanvas');
+            if (canvas) {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+        });
+    </script>
+</body>
+</html>
